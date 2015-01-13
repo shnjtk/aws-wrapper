@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+
+# Specify your gem's dependencies in aws-wrapper.gemspec
+gemspec
+
+gem "aws-sdk"
