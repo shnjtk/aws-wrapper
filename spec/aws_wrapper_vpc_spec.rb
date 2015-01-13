@@ -35,7 +35,7 @@ module AwsWrapper
 
     after(:all) do
       created_vpcs.each do |vpc_id|
-        AwsWrapper::Vpc.delete(:name => vpc_id)
+        AwsWrapper::Vpc.delete(:id => vpc_id)
       end
     end
 
