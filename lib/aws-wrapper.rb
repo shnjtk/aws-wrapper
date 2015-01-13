@@ -2,4 +2,6 @@ require "aws-sdk"
 
 require "aws-wrapper/version"
 require "aws-wrapper/core"
-require "aws-wrapper/vpc"
+require "aws-wrapper/ec2"
+require "aws-wrapper/ec2/vpc"
+require "aws-wrapper/ec2/subnet"
