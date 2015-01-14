@@ -1,6 +1,6 @@
-# Aws::Wrapper
+# AwsWrapper
 
-TODO: Write a gem description
+aws-sdk wrapper
 
 ## Installation
 
@@ -20,7 +20,12 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+require 'aws-wrapper'
+
+# set AWS config
+AwsWrapper::Core.setup
+```
 
 ## Contributing
 
