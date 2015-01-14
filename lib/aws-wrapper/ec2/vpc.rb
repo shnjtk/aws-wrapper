@@ -6,6 +6,9 @@ module AwsWrapper
         res = ec2.client.create_vpc(:cidr_block => cidr_block, :instance_tenancy => tenancy)
         aws_vpc = AWS::EC2::VPC.new(res[:vpc][:vpc_id])
         aws_vpc.add_tag("Name", :value => name)
+        rt = AwsWrapper::RouteTable.find_main(:name => name)
+        aws_rt = AWS::EC2::RouteTable.new(rt[:route_table_id])
+        aws_rt.add_tag("Name", :value => "#{name}-default")
         find(:name => name) # return vpc
       end
 
