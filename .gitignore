@@ -1,5 +1,6 @@
 /.bundle/
 /.yardoc
+/.travis.yml
 /Gemfile.lock
 /_yardoc/
 /coverage/
