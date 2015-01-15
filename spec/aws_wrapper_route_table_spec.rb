@@ -41,6 +41,13 @@ module AwsWrapper
       expect(rt.has_route?(RTABLE_CIDR)).to be true
     end
 
+    it "deletes an entry from the table" do
+      rt_info = AwsWrapper::RouteTable.find(:name => RTABLE_NAME)
+      rt = AwsWrapper::RouteTable.new(:id => rt_info[:route_table_id])
+      rt.delete_route(RTABLE_CIDR)
+      expect(rt.has_route?(RTABLE_CIDR)).not_to be true
+    end
+
     after(:all) do
       created_rtables.each do |rtable_id|
         AwsWrapper::RouteTable.delete(:id => rtable_id)
