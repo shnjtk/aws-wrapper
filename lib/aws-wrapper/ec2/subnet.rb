@@ -1,5 +1,22 @@
 module AwsWrapper
   class Subnet
+    def initialize(options)
+      @subnet = Subnet.find(options)
+      @aws_subnet = AWS::EC2::Subnet.new(@subnet[:subnet_id])
+    end
+
+    def set_route_table(options = {})
+      rt = AwsWrapper::RouteTable.find(options)
+      return false if rt.nil?
+      @aws_subnet.set_route_table(rt[:route_table_id])
+    end
+
+    def associated?(options = {})
+      rt = AwsWrapper::RouteTable.find(options)
+      return false if rt.nil?
+      @aws_subnet.route_table.route_table_id == rt[:route_table_id]
+    end
+
     class << self
       # specify vpc with :name or :id
       def create(name, cidr, vpc = {}, az = nil)
