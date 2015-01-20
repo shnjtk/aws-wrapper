@@ -29,7 +29,7 @@ module AwsWrapper
     it "deletes a SecurityGroup named \'#{SECURITY_GROUP_NAME}\'" do
       sg_info = AwsWrapper::SecurityGroup.find(:name => SECURITY_GROUP_NAME)
       AwsWrapper::SecurityGroup.delete(:name => SECURITY_GROUP_NAME)
-      created_security_groups.delete(sg_info[:group_id])
+      created_security_groups.delete(:id => sg_info[:group_id])
       expect(AwsWrapper::SecurityGroup.exists?(:name => SECURITY_GROUP_NAME)).not_to be true
     end
 
