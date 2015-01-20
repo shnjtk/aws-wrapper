@@ -50,7 +50,7 @@ module AwsWrapper
           subnet[:tag_set].each do |tag|
             return subnet if options.has_key?(:name) and tag[:value] == options[:name]
           end
-          return subnet if options.has_key?(:id) and vpc[:subnet_id] == options[:id]
+          return subnet if options.has_key?(:id) and subnet[:subnet_id] == options[:id]
         end
         nil
       end
