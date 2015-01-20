@@ -2,7 +2,7 @@ module AwsWrapper
   class SecurityGroup
     class << self
       # specify vpc by :id or :name
-      def create(name, description, vpc)
+      def create(name, description, vpc = {})
         vpc_info = AwsWrapper::Vpc.find(vpc)
         return false if vpc_info.nil?
         ec2 = AWS::EC2.new
