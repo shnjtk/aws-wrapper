@@ -1,5 +1,5 @@
 module AwsWrapper
-  class Ec2
+  module Ec2
 
   end
 end
