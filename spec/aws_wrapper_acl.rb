@@ -10,13 +10,15 @@ module AwsWrapper
 
       INBOUND_NUMBER = 100
       INBOUND_PROTO  = AwsWrapper::Ec2::Acl::PROTO_TCP
-      INBOUND_PORT   = AwsWrapper::Ec2::Acl::PORT_ALL
+      INBOUND_PORT1  = AwsWrapper::Ec2::Acl::PORT_ALL
+      INBOUND_PORT2  = (80..80)
       INBOUND_CIDR   = "0.0.0.0/0"
       INBOUND_ACTION = AwsWrapper::Ec2::Acl::ACTION_ALLOW
 
       OUTBOUND_NUMBER = 100
       OUTBOUND_PROTO  = AwsWrapper::Ec2::Acl::PROTO_TCP
-      OUTBOUND_PORT   = AwsWrapper::Ec2::Acl::PORT_ALL
+      OUTBOUND_PORT1  = AwsWrapper::Ec2::Acl::PORT_ALL
+      OUTBOUND_PORT2  = (80..80)
       OUTBOUND_CIDR   = "0.0.0.0/0"
       OUTBOUND_ACTION = AwsWrapper::Ec2::Acl::ACTION_ALLOW
 
@@ -37,9 +39,16 @@ module AwsWrapper
 
       it "adds the inbound rule" do
         acl = AwsWrapper::Ec2::Acl.new(:name => ACL_NAME)
-        acl.add_inbound_rule(INBOUND_NUMBER, INBOUND_PROTO, INBOUND_PORT,
+        acl.add_inbound_rule(INBOUND_NUMBER, INBOUND_PROTO, INBOUND_PORT1,
                              INBOUND_CIDR, INBOUND_ACTION)
         expect(acl.inbound_rule_exists?(INBOUND_NUMBER)).to be true
+      end
+
+      it "replaces the inbound rule" do
+        acl = AwsWrapper::Ec2::Acl.new(:name => ACL_NAME)
+        acl.add_inbound_rule(INBOUND_NUMBER, INBOUND_PROTO, INBOUND_PORT2,
+                             INBOUND_CIDR, INBOUND_ACTION)
+        expect(acl.inbound_rule(INBOUND_NUMBER).port_range).to eq(INBOUND_PORT2)
       end
 
       it "deletes the inbound rule" do
@@ -50,9 +59,16 @@ module AwsWrapper
 
       it "adds the outbound rule" do
         acl = AwsWrapper::Ec2::Acl.new(:name => ACL_NAME)
-        acl.add_outbound_rule(OUTBOUND_NUMBER, OUTBOUND_PROTO, INBOUND_PORT,
+        acl.add_outbound_rule(OUTBOUND_NUMBER, OUTBOUND_PROTO, INBOUND_PORT1,
                               OUTBOUND_CIDR, OUTBOUND_ACTION)
         expect(acl.outbound_rule_exists?(OUTBOUND_NUMBER)).to be true
+      end
+
+      it "replaces the outbound rule" do
+        acl = AwsWrapper::Ec2::Acl.new(:name => ACL_NAME)
+        acl.add_outbound_rule(OUTBOUND_NUMBER, OUTBOUND_PROTO, OUTBOUND_PORT2,
+                              OUTBOUND_CIDR, OUTBOUND_ACTION)
+        expect(acl.outbound_rule(OUTBOUND_NUMBER).port_range).to eq(OUTBOUND_PORT2)
       end
 
       it "deletes the outbound rule" do

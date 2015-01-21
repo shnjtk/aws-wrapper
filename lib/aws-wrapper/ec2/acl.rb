@@ -28,6 +28,13 @@ module AwsWrapper
         rules
       end
 
+      def inbound_rule(number)
+        inbound_rules.each do |rule|
+          return rule if rule.rule_number == number
+        end
+        nil
+      end
+
       def inbound_rule_exists?(number)
         rule_exists?(number, false)
       end
@@ -50,6 +57,13 @@ module AwsWrapper
           rules << entry if entry.egress
         end
         rules
+      end
+
+      def outbound_rule(number)
+        outbound_rules.each do |rule|
+          return rule if rule.rule_number == number
+        end
+        nil
       end
 
       def outbound_rule_exists?(number)
