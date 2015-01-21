@@ -5,9 +5,6 @@ module AwsWrapper
       ACTION_ALLOW = :allow
       ACTION_DENY  = :deny
 
-      INBOUND = :ingress
-      OUTBOUND = :egress
-
       PROTO_TCP = 6
       PROTO_UDP = 17
       PROTO_ALL = -1
