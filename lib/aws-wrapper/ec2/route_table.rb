@@ -95,8 +95,8 @@ module AwsWrapper
           nil
         end
 
-        def find_main(options = {})
-          vpc = AwsWrapper::Ec2::Vpc.find(options)
+        def find_main(vpc_id_or_name)
+          vpc = AwsWrapper::Ec2::Vpc.find(vpc_id_or_name)
           return nil if vpc.nil?
           ec2 = AWS::EC2.new
           res = ec2.client.describe_route_tables
