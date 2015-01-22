@@ -24,41 +24,41 @@ module AwsWrapper
       end
 
       it "creates a Subnet named \'#{SUBNET_NAME}\' with CIDR block \'#{SUBNET_CIDR}\'" do
-        AwsWrapper::Ec2::Subnet.create(SUBNET_NAME, SUBNET_CIDR, {:name => VPC_NAME})
-        expect(AwsWrapper::Ec2::Subnet.exists?(:name => SUBNET_NAME)).to be true
+        AwsWrapper::Ec2::Subnet.create(SUBNET_NAME, SUBNET_CIDR, VPC_NAME)
+        expect(AwsWrapper::Ec2::Subnet.exists?(SUBNET_NAME)).to be true
       end
 
       it "has a Subnet named \'#{SUBNET_NAME}\' with CIDR block \'#{SUBNET_CIDR}\'" do
-        subnet_info = AwsWrapper::Ec2::Subnet.find(:name => SUBNET_NAME)
+        subnet_info = AwsWrapper::Ec2::Subnet.find(SUBNET_NAME)
         expect(subnet_info).not_to be nil
         expect(subnet_info[:cidr_block]).to eql SUBNET_CIDR
       end
 
       it "sets a route table" do
-        rt = AwsWrapper::Ec2::RouteTable.create(RTABLE_NAME, {:name => VPC_NAME})
+        rt = AwsWrapper::Ec2::RouteTable.create(RTABLE_NAME, VPC_NAME)
         created_rtables << rt[:route_table_id]
-        subnet = AwsWrapper::Ec2::Subnet.new(:name => SUBNET_NAME)
-        subnet.set_route_table(:name => RTABLE_NAME)
-        expect(subnet.associated?(:name => RTABLE_NAME)).to be true
+        subnet = AwsWrapper::Ec2::Subnet.new(SUBNET_NAME)
+        subnet.set_route_table(RTABLE_NAME)
+        expect(subnet.associated?(RTABLE_NAME)).to be true
       end
 
       it "deletes a Subnet named \'#{VPC_NAME}\'" do
-        AwsWrapper::Ec2::Subnet.delete(:name => SUBNET_NAME)
-        expect(AwsWrapper::Ec2::Subnet.exists?(:name => SUBNET_NAME)).not_to be true
+        AwsWrapper::Ec2::Subnet.delete(SUBNET_NAME)
+        expect(AwsWrapper::Ec2::Subnet.exists?(SUBNET_NAME)).not_to be true
       end
 
       after(:all) do
         created_subnets.each do |subnet_id|
-          AwsWrapper::Ec2::Subnet.delete(:id => subnet_id)
+          AwsWrapper::Ec2::Subnet.delete(subnet_id)
         end
         created_rtables.each do |rtable_id|
-          AwsWrapper::Ec2::RouteTable.delete(:id => rtable_id)
+          AwsWrapper::Ec2::RouteTable.delete(rtable_id)
         end
         created_igws.each do |igw_id|
-          AwsWrapper::Ec2::InternetGateway.delete!(:id => igw_id)
+          AwsWrapper::Ec2::InternetGateway.delete!(igw_id)
         end
         created_vpcs.each do |vpc_id|
-          AwsWrapper::Ec2::Vpc.delete(:id => vpc_id)
+          AwsWrapper::Ec2::Vpc.delete(vpc_id)
         end
       end
 

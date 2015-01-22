@@ -2,9 +2,8 @@ module AwsWrapper
   module Ec2
     class RouteTable
 
-      # RouteTable :id or :name
-      def initialize(options)
-        @rt = RouteTable.find(options)
+      def initialize(id_or_name)
+        @rt = RouteTable.find(id_or_name)
         @aws_rt = AWS::EC2::RouteTable.new(@rt[:route_table_id])
       end
 
@@ -43,8 +42,8 @@ module AwsWrapper
         @aws_rt.associations
       end
 
-      def associated_with?(options)
-        target_subnet = AwsWrapper::Ec2::Subnet.find(options)
+      def associated_with?(id_or_name)
+        target_subnet = AwsWrapper::Ec2::Subnet.find(id_or_name)
         return false if target_subnet.nil?
         subnets.each do |subnet|
           return true if subnet.subnet_id == target_subnet[:subnet_id]
@@ -57,40 +56,39 @@ module AwsWrapper
       end
 
       def delete
-        self.delete(:id => @rt[:route_table_id])
+        self.delete(@rt[:route_table_id])
       end
 
       class << self
-        # specify vpc by :id or :name
         def create(name, vpc, main = false)
-          vpc = AwsWrapper::Ec2::Vpc.find(vpc)
-          return false if vpc.nil?
+          vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
+          return false if vpc_info.nil?
           ec2 = AWS::EC2.new
-          res = ec2.client.create_route_table(:vpc_id => vpc[:vpc_id])
+          res = ec2.client.create_route_table(:vpc_id => vpc_info[:vpc_id])
           aws_rt = AWS::EC2::RouteTable.new(res[:route_table][:route_table_id])
           aws_rt.add_tag("Name", :value => name)
-          find(:id => res[:route_table][:route_table_id])
+          find(res[:route_table][:route_table_id])
         end
 
-        def delete(options)
-          rt = find(options)
+        def delete(id_or_name)
+          rt = find(id_or_name)
           return false if rt.nil?
           aws_rt = AWS::EC2::RouteTable.new(rt[:route_table_id])
           aws_rt.delete
         end
 
-        def exists?(options = {})
-          find(options).nil? ? false : true
+        def exists?(id_or_name)
+          find(id_or_name).nil? ? false : true
         end
 
-        def find(options = {})
+        def find(id_or_name)
           ec2 = AWS::EC2.new
           res = ec2.client.describe_route_tables
           res[:route_table_set].each do |rtable|
             rtable[:tag_set].each do |tag|
-              return rtable if options.has_key?(:name) and tag[:value] == options[:name]
+              return rtable if tag[:value] == id_or_name
             end
-            return rtable if options.has_key?(:id) and rtable[:route_table_id] == options[:id]
+            return rtable if rtable[:route_table_id] == id_or_name
           end
           nil
         end

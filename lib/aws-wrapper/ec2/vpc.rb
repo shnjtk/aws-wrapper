@@ -27,18 +27,18 @@ module AwsWrapper
           rescue AWS::EC2::Errors::DependencyViolation
             vpc = find(id_or_name)
             vpc.instances.each do |instance|
-              AwsWrapper::Ec2::Instance.delete(:id => instance.id)
+              AwsWrapper::Ec2::Instance.delete(instance.id)
             end
             vpc.subnets.each do |subnet|
-              AwsWrapper::Ec2::Subnet.delete(:id => subnet.id)
+              AwsWrapper::Ec2::Subnet.delete(subnet.id)
             end
             vpc.route_tables.each do |rtable|
-              AwsWrapper::Ec2::RouteTable.delete(:id => rtable.id)
+              AwsWrapper::Ec2::RouteTable.delete(rtable.id)
             end
             vpc.security_groups.each do |sg|
-              AwsWrapper::Ec2::SecurityGroup.delete(:id => sg.id)
+              AwsWrapper::Ec2::SecurityGroup.delete(sg.id)
             end
-            AwsWrapper::Ec2::InternetGateway.delete(:id => vpc.internet_gateway.id)
+            AwsWrapper::Ec2::InternetGateway.delete(vpc.internet_gateway.id)
             delete(id_or_name)
           end
         end

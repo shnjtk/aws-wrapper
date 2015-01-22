@@ -22,19 +22,19 @@ module AwsWrapper
       AwsWrapper::Core.setup
       vpc_info = AwsWrapper::Vpc.create(VPC_NAME, VPC_CIDR)
       created_vpcs << vpc_info[:vpc_id]
-      igw_info = AwsWrapper::InternetGateway.create(IGW_NAME, {:name => VPC_NAME})
+      igw_info = AwsWrapper::InternetGateway.create(IGW_NAME, VPC_NAME)
       created_igws << igw_info[:internet_gateway_id]
-      subnet_info = AwsWrapper::Subnet.create(SUBNET_NAME, SUBNET_CIDR, {:name => VPC_NAME})
+      subnet_info = AwsWrapper::Subnet.create(SUBNET_NAME, SUBNET_CIDR, VPC_NAME)
       created_subnets << subnet_info[:subnet_id]
-      security_group = AwsWrapper::SecurityGroup.create(SECURITY_GROUP_NAME, DESCRIPTION, {:id => vpc_info[:vpc_id]})
+      security_group = AwsWrapper::SecurityGroup.create(SECURITY_GROUP_NAME, DESCRIPTION, vpc_info[:vpc_id])
       created_security_groups << security_group[:group_id]
     end
 
     it "creates a ELB named \'#{ELB_NAME}\'" do
       listener = AwsWrapper::Elb.create_listener("HTTP", 80, "HTTP", 80)
-      vpc = AwsWrapper::Vpc.find(:name => VPC_NAME)
-      subnet = AwsWrapper::Subnet.find(:name => SUBNET_NAME)
-      sg = AwsWrapper::SecurityGroup.find(:name => SECURITY_GROUP_NAME)
+      vpc = AwsWrapper::Vpc.find(VPC_NAME)
+      subnet = AwsWrapper::Subnet.find(SUBNET_NAME)
+      sg = AwsWrapper::SecurityGroup.find(SECURITY_GROUP_NAME)
       elb = AwsWrapper::Elb.create(ELB_NAME, [listener], [],
                                   [subnet[:subnet_id]], [sg[:group_id]])
       created_elbs << ELB_NAME
@@ -51,13 +51,13 @@ module AwsWrapper
         AwsWrapper::Elb.delete!(elb_name)
       end
       created_subnets.each do |subnet_id|
-        AwsWrapper::Subnet.delete(:id => subnet_id)
+        AwsWrapper::Subnet.delete(subnet_id)
       end
       created_igws.each do |igw_id|
-        AwsWrapper::InternetGateway.delete!(:id => igw_id)
+        AwsWrapper::InternetGateway.delete!(igw_id)
       end
       created_vpcs.each do |vpc_id|
-        AwsWrapper::Vpc.delete(:id => vpc_id)
+        AwsWrapper::Vpc.delete(vpc_id)
       end
     end
 

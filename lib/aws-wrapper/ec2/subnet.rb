@@ -1,26 +1,29 @@
 module AwsWrapper
   module Ec2
     class Subnet
-      def initialize(options)
-        @subnet = Subnet.find(options)
+      def initialize(id_or_name)
+        @subnet = Subnet.find(id_or_name)
         @aws_subnet = AWS::EC2::Subnet.new(@subnet[:subnet_id])
       end
 
-      def set_route_table(options = {})
-        rt = AwsWrapper::Ec2::RouteTable.find(options)
+      def set_route_table(id_or_name)
+        rt = AwsWrapper::Ec2::RouteTable.find(id_or_name)
         return false if rt.nil?
         @aws_subnet.set_route_table(rt[:route_table_id])
       end
 
-      def associated?(options = {})
-        rt = AwsWrapper::Ec2::RouteTable.find(options)
+      def associated?(id_or_name)
+        rt = AwsWrapper::Ec2::RouteTable.find(id_or_name)
         return false if rt.nil?
         @aws_subnet.route_table.route_table_id == rt[:route_table_id]
       end
 
+      def network_acl
+        @aws_subnet.network_acl
+      end
+
       class << self
-        # specify vpc with :name or :id
-        def create(name, cidr, vpc = {}, az = nil)
+        def create(name, cidr, vpc, az = nil)
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
           return false if vpc_info.nil?
           ec2 = AWS::EC2.new
@@ -29,43 +32,43 @@ module AwsWrapper
           res = ec2.client.create_subnet(options)
           aws_subnet = AWS::EC2::Subnet.new(res[:subnet][:subnet_id])
           aws_subnet.add_tag("Name", :value => name)
-          find(:name => name) # return subnet
+          find(name)
         end
 
-        def delete(options = {})
-          subnet = find(options)
+        def delete(id_or_name)
+          subnet = find(id_or_name)
           return false if subnet.nil?
           ec2 = AWS::EC2.new
           res = ec2.client.delete_subnet(:subnet_id => subnet[:subnet_id])
           res[:return]
         end
 
-        def delete!(options = {})
+        def delete!(id_or_name)
           begin
-            delete(options)
+            delete(id_or_name)
           rescue AWS::EC2::Errors::DependencyViolation
-            subnet = AwsWrapper::Ec2::Subnet.new(options)
-            AwsWrapper::Ec2::Acl.delete(:id => subnet.network_acl.id)
-            AwsWrapper::Ec2::RouteTable.delete(:id => subnet.route_table.id)
+            subnet = AwsWrapper::Ec2::Subnet.new(id_or_name)
+            AwsWrapper::Ec2::Acl.delete(subnet.network_acl.id)
+            AwsWrapper::Ec2::RouteTable.delete(subnet.route_table.id)
             subnet.instances.each do |instance|
-              AwsWrapper::Ec2::Instance.delete(:id => instance.id)
+              AwsWrapper::Ec2::Instance.delete(instance.id)
             end
-            delete(options)
+            delete(id_or_name)
           end
         end
 
-        def exists?(options = {})
-          find(options).nil? ? false : true
+        def exists?(id_or_name)
+          find(id_or_name).nil? ? false : true
         end
 
-        def find(options = {})
+        def find(id_or_name)
           ec2 = AWS::EC2.new
           res = ec2.client.describe_subnets
           res[:subnet_set].each do |subnet|
             subnet[:tag_set].each do |tag|
-              return subnet if options.has_key?(:name) and tag[:value] == options[:name]
+              return subnet if tag[:value] == id_or_name
             end
-            return subnet if options.has_key?(:id) and subnet[:subnet_id] == options[:id]
+            return subnet if subnet[:subnet_id] == id_or_name
           end
           nil
         end

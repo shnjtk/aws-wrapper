@@ -19,27 +19,27 @@ module AwsWrapper
       end
 
       it "creates a SecurityGroup named \'#{SECURITY_GROUP_NAME}\'" do
-        vpc = AwsWrapper::Ec2::Vpc.find(:name => VPC_NAME)
+        vpc = AwsWrapper::Ec2::Vpc.find(VPC_NAME)
         sg_info = AwsWrapper::Ec2::SecurityGroup.create(
-          SECURITY_GROUP_NAME, DESCRIPTION, {:id => vpc[:vpc_id]}
+          SECURITY_GROUP_NAME, DESCRIPTION, vpc[:vpc_id]
         )
         created_security_groups << sg_info[:group_id]
-        expect(AwsWrapper::Ec2::SecurityGroup.exists?(:name => SECURITY_GROUP_NAME)).to be true
+        expect(AwsWrapper::Ec2::SecurityGroup.exists?(SECURITY_GROUP_NAME)).to be true
       end
 
       it "deletes a SecurityGroup named \'#{SECURITY_GROUP_NAME}\'" do
-        sg_info = AwsWrapper::Ec2::SecurityGroup.find(:name => SECURITY_GROUP_NAME)
-        AwsWrapper::Ec2::SecurityGroup.delete(:name => SECURITY_GROUP_NAME)
-        created_security_groups.delete(:id => sg_info[:group_id])
-        expect(AwsWrapper::Ec2::SecurityGroup.exists?(:name => SECURITY_GROUP_NAME)).not_to be true
+        sg_info = AwsWrapper::Ec2::SecurityGroup.find(SECURITY_GROUP_NAME)
+        AwsWrapper::Ec2::SecurityGroup.delete(SECURITY_GROUP_NAME)
+        created_security_groups.delete(sg_info[:group_id])
+        expect(AwsWrapper::Ec2::SecurityGroup.exists?(SECURITY_GROUP_NAME)).not_to be true
       end
 
       after(:all) do
         created_security_groups.each do |sg_id|
-          AwsWrapper::Ec2::SecurityGroup.delete(:id => sg_id)
+          AwsWrapper::Ec2::SecurityGroup.delete(sg_id)
         end
         created_vpcs.each do |vpc_id|
-          AwsWrapper::Ec2::Vpc.delete(:id => vpc_id)
+          AwsWrapper::Ec2::Vpc.delete(vpc_id)
         end
       end
 

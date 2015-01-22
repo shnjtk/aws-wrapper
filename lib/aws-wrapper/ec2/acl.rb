@@ -11,8 +11,8 @@ module AwsWrapper
 
       PORT_ALL = (1..65535)
 
-      def initialize(options = {})
-        @acl = AwsWrapper::Ec2::Acl.find(options)
+      def initialize(id_or_name)
+        @acl = AwsWrapper::Ec2::Acl.find(id_or_name)
         @aws_acl = AWS::EC2::NetworkACL.new(@acl[:network_acl_id])
       end
 
@@ -119,7 +119,7 @@ module AwsWrapper
       private :rule_exists?
 
       class << self
-        def create(name, vpc = {}, options = {})
+        def create(name, vpc, options = {})
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
           return false if vpc_info.nil?
           options[:vpc_id] = vpc_info[:vpc_id]
@@ -127,29 +127,29 @@ module AwsWrapper
           res = ec2.client.create_network_acl(options)
           aws_acl = AWS::EC2::NetworkACL.new(res[:network_acl][:network_acl_id])
           aws_acl.add_tag("Name", :value => name)
-          find(:name => name)
+          find(name)
         end
 
-        def delete(options = {})
-          acl = find(options)
+        def delete(id_or_name)
+          acl = find(id_or_name)
           return false if acl.nil?
           ec2 = AWS::EC2.new
           res = ec2.client.delete_network_acl(:network_acl_id => acl[:network_acl_id])
           res[:return]
         end
 
-        def exists?(options = {})
-          find(options).nil? ? false : true
+        def exists?(id_or_name)
+          find(id_or_name).nil? ? false : true
         end
 
-        def find(options = {})
+        def find(id_or_name)
           ec2 = AWS::EC2.new
           res = ec2.client.describe_network_acls
           res[:network_acl_set].each do |acl|
             acl[:tag_set].each do |tag|
-              return acl if options.has_key?(:name) and tag[:value] == options[:name]
+              return acl if tag[:value] == id_or_name
             end
-            return acl if options.has_key?(:id) and acl[:network_acl_id] == options[:id]
+            return acl if acl[:network_acl_id] == id_or_name
           end
           nil
         end

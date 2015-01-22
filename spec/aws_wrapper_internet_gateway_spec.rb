@@ -18,22 +18,22 @@ module AwsWrapper
       end
 
       it "creates a InternetGateway named \'#{IGW_NAME}\'" do
-        igw = AwsWrapper::Ec2::InternetGateway.create(IGW_NAME, {:name => VPC_NAME})
+        igw = AwsWrapper::Ec2::InternetGateway.create(IGW_NAME, VPC_NAME)
         created_igws << igw[:internet_gateway_id]
-        expect(AwsWrapper::Ec2::InternetGateway.exists?(:name => IGW_NAME)).to be true
+        expect(AwsWrapper::Ec2::InternetGateway.exists?(IGW_NAME)).to be true
       end
 
       it "deletes a InternetGateway named \'#{IGW_NAME}\'" do
-        AwsWrapper::Ec2::InternetGateway.delete!(:name => IGW_NAME)
-        expect(AwsWrapper::Ec2::InternetGateway.exists?(:name => IGW_NAME)).not_to be true
+        AwsWrapper::Ec2::InternetGateway.delete!(IGW_NAME)
+        expect(AwsWrapper::Ec2::InternetGateway.exists?(IGW_NAME)).not_to be true
       end
 
       after(:all) do
         created_vpcs.each do |vpc_id|
-          AwsWrapper::Ec2::Vpc.delete(:id => vpc_id)
+          AwsWrapper::Ec2::Vpc.delete(vpc_id)
         end
         created_igws.each do |igw_id|
-          AwsWrapper::Ec2::InternetGateway.delete(:id => igw_id)
+          AwsWrapper::Ec2::InternetGateway.delete(igw_id)
         end
       end
 
