@@ -40,6 +40,20 @@ module AwsWrapper
           res[:return]
         end
 
+        def delete!(options = {})
+          begin
+            delete(options)
+          rescue AWS::EC2::Errors::DependencyViolation
+            subnet = AwsWrapper::Ec2::Subnet.new(options)
+            AwsWrapper::Ec2::Acl.delete(:id => subnet.network_acl.id)
+            AwsWrapper::Ec2::RouteTable.delete(:id => subnet.route_table.id)
+            subnet.instances.each do |instance|
+              AwsWrapper::Ec2::Instance.delete(:id => instance.id)
+            end
+            delete(options)
+          end
+        end
+
         def exists?(options = {})
           find(options).nil? ? false : true
         end
