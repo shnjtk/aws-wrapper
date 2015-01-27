@@ -34,6 +34,20 @@ module AwsWrapper
         expect(subnet_info[:cidr_block]).to eql SUBNET_CIDR
       end
 
+      it "enables to assign public IP automatically" do
+        subnet = AwsWrapper::Ec2::Subnet.new(SUBNET_NAME)
+        subnet.enable_auto_assign_public_ip(true)
+        subnet_info = AwsWrapper::Ec2::Subnet.find(SUBNET_NAME)
+        expect(subnet_info[:map_public_ip_on_launch]).to be true
+      end
+
+      it "disables to assign public IP automatically" do
+        subnet = AwsWrapper::Ec2::Subnet.new(SUBNET_NAME)
+        subnet.enable_auto_assign_public_ip(false)
+        subnet_info = AwsWrapper::Ec2::Subnet.find(SUBNET_NAME)
+        expect(subnet_info[:map_public_ip_on_launch]).not_to be true
+      end
+
       it "sets a route table" do
         rt = AwsWrapper::Ec2::RouteTable.create(RTABLE_NAME, VPC_NAME)
         created_rtables << rt[:route_table_id]

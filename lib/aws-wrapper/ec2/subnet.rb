@@ -30,6 +30,10 @@ module AwsWrapper
         res[:return]
       end
 
+      def auto_assign_public_ip_enabled?
+        @subnet[:map_public_ip_on_launch]
+      end
+
       class << self
         def create(name, cidr, vpc, az = nil)
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
