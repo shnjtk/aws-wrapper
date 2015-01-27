@@ -35,7 +35,7 @@ module AwsWrapper
       end
 
       class << self
-        def create(name, cidr, vpc, az = nil)
+        def create(name, cidr, vpc, az = nil, public_ip = false)
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
           return false if vpc_info.nil?
           ec2 = AWS::EC2.new
@@ -44,6 +44,7 @@ module AwsWrapper
           res = ec2.client.create_subnet(options)
           aws_subnet = AWS::EC2::Subnet.new(res[:subnet][:subnet_id])
           aws_subnet.add_tag("Name", :value => name)
+          aws_subnet.enable_auto_assign_public_ip if public_ip
           find(name)
         end
 
