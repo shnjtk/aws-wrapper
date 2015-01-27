@@ -22,6 +22,10 @@ module AwsWrapper
         @aws_subnet.network_acl
       end
 
+      def network_acl=(acl)
+        @aws_subnet.network_acl = acl
+      end
+
       def enable_auto_assign_public_ip(enable = true)
         ec2 = AWS::EC2.new
         res = ec2.client.modify_subnet_attribute(
@@ -32,6 +36,10 @@ module AwsWrapper
 
       def auto_assign_public_ip_enabled?
         @subnet[:map_public_ip_on_launch]
+      end
+
+      def vpc
+        AwsWrapper::Ec2::Vpc.find(@subnet[:vpc_id])
       end
 
       class << self
