@@ -7,6 +7,8 @@ module AwsWrapper
       VPC_NAME = "vpc-acl-test"
       VPC_CIDR = "10.10.0.0/16"
       ACL_NAME = "acl-test"
+      SUBNET_NAME = "sn-scl-test"
+      SUBNET_CIDR = "10.10.1.0/24"
 
       INBOUND_NUMBER = 100
       INBOUND_PROTO  = AwsWrapper::Ec2::Acl::PROTO_TCP
@@ -24,17 +26,32 @@ module AwsWrapper
 
       created_vpcs = []
       created_acls = []
+      created_subnets = []
 
       before(:all) do
         AwsWrapper::Core.setup
         vpc = AwsWrapper::Ec2::Vpc.create(VPC_NAME, VPC_CIDR)
         created_vpcs << vpc[:vpc_id]
+        subnet = AwsWrapper::Ec2::Subnet.create(SUBNET_NAME, SUBNET_CIDR, VPC_NAME)
+        created_subnets << subnet[:subnet_id]
       end
 
       it "creates Network ACL named '#{ACL_NAME}' in VPC #{VPC_NAME}" do
         acl = AwsWrapper::Ec2::Acl.create(ACL_NAME, VPC_NAME)
         created_acls << acl[:network_acl_id]
         expect(AwsWrapper::Ec2::Acl.exists?(ACL_NAME)).to be true
+      end
+
+      it "associates with subnet" do
+        acl = AwsWrapper::Ec2::Acl.new(ACL_NAME)
+        acl.associate(SUBNET_NAME)
+        expect(acl.associated?(SUBNET_NAME)).to be true
+      end
+
+      it "disassociates with subnet" do
+        acl = AwsWrapper::Ec2::Acl.new(ACL_NAME)
+        acl.disassociate(SUBNET_NAME)
+        expect(acl.associated?(SUBNET_NAME)).not_to be true
       end
 
       it "adds the inbound rule" do
@@ -85,6 +102,9 @@ module AwsWrapper
       after(:all) do
         created_acls.each do |acl_id|
           AwsWrapper::Ec2::Acl.delete(acl_id)
+        end
+        created_subnets.each do |subnet_id|
+          AwsWrapper::Ec2::Subnet.delete(subnet_id)
         end
         created_vpcs.each do |vpc_id|
           AwsWrapper::Ec2::Vpc.delete(vpc_id)

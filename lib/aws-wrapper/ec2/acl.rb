@@ -27,13 +27,13 @@ module AwsWrapper
 
       def associated?(subnet_id_or_name)
         subnet = AwsWrapper::Ec2::Subnet.new(subnet_id_or_name)
-        subnet.network_acl.id == @acl[:network_acl_id]
+        subnet.network_acl.network_acl_id == @acl[:network_acl_id]
       end
 
       def disassociate(subnet_id_or_name)
         subnet = AwsWrapper::Ec2::Subnet.new(subnet_id_or_name)
-        vpc = AwsWrapper::Ec2::Vpc.find(subnet.vpc[:vpc_id])
-        subnet.network_acl.id = vpc.default_acl
+        vpc = AwsWrapper::Ec2::Vpc.new(subnet.vpc[:vpc_id])
+        subnet.network_acl = vpc.default_acl
       end
 
       def inbound_rules
