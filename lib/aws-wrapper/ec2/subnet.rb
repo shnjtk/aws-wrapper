@@ -44,7 +44,8 @@ module AwsWrapper
           res = ec2.client.create_subnet(options)
           aws_subnet = AWS::EC2::Subnet.new(res[:subnet][:subnet_id])
           aws_subnet.add_tag("Name", :value => name)
-          aws_subnet.enable_auto_assign_public_ip if public_ip
+          subnet = AwsWrapper::Ec2::Subnet.new(name)
+          subnet.enable_auto_assign_public_ip if public_ip
           find(name)
         end
 
