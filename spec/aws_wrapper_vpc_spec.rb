@@ -29,6 +29,11 @@ module AwsWrapper
         expect(vpc_info[:cidr_block]).to eql VPC_CIDR
       end
 
+      it "has a default ACL" do
+        vpc = AwsWrapper::Ec2::Vpc.new(VPC_NAME)
+        expect(vpc.default_acl).not_to be nil
+      end
+
       it "deletes a VPC named \'#{VPC_NAME}\'" do
         AwsWrapper::Ec2::Vpc.delete(VPC_NAME)
         expect(AwsWrapper::Ec2::Vpc.exists?(VPC_NAME)).not_to be true

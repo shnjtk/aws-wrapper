@@ -1,6 +1,19 @@
 module AwsWrapper
   module Ec2
     class Vpc
+
+      def initialize(id_or_name)
+        @vpc = Vpc.find(id_or_name)
+        @aws_vpc = AWS::EC2::VPC.new(@vpc[:vpc_id])
+      end
+
+      def default_acl
+        @aws_vpc.network_acls.each do |acl|
+          return acl if acl.default
+        end
+        nil
+      end
+
       class << self
         def create(name, cidr_block, tenancy = 'default')
           ec2 = AWS::EC2.new
