@@ -10,6 +10,10 @@ module AwsWrapper
 
       PORT_ALL   = nil
 
+      def group_id
+        @sg[:group_id]
+      end
+
       def initialize(id_or_name)
         @sg = SecurityGroup.find(id_or_name)
         @aws_sg = AWS::EC2::SecurityGroup.new(@sg[:group_id])
