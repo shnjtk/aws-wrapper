@@ -25,6 +25,40 @@ module AwsWrapper
         res[:source_dest_check][:value]
       end
 
+      def security_groups
+        @aws_instance.security_groups
+      end
+
+      def associated_with?(group_id_or_name)
+        target_group = AwsWrapper::Ec2::SecurityGroup.find(group_id_or_name)
+        @aws_instance.security_groups.each do |group|
+          return true if group.group_id == target_group[:group_id]
+        end
+        return false
+      end
+
+      def associate_security_group(group_id_or_name)
+        current_groups = []
+        security_groups.each { |group| current_groups << group.group_id }
+        sg = AwsWrapper::Ec2::SecurityGroup.find(group_id_or_name)
+        new_groups = current_groups << sg[:group_id]
+        ec2 = AWS::EC2.new
+        ec2.client.modify_instance_attribute(
+          :instance_id => @instance[:instance_id], :groups => new_groups
+        )
+      end
+
+      def disassociate_security_group(group_id_or_name)
+        current_groups = []
+        security_groups.each { |group| current_groups << group.group_id }
+        sg = AwsWrapper::Ec2::SecurityGroup.find(group_id_or_name)
+        new_groups = current_groups - [ sg[:group_id] ]
+        ec2 = AWS::EC2.new
+        ec2.client.modify_instance_attribute(
+          :instance_id => @instance[:instance_id], :groups => new_groups
+        )
+      end
+
       class << self
         def create(name, ami_id, instance_type, options = {})
           options[:image_id] = ami_id

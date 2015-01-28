@@ -11,9 +11,12 @@ module AwsWrapper
       INSTANCE_NAME = "instance-test"
       INSTANCE_AMI  = "ami-4985b048"
       INSTANCE_TYPE = "t2.micro"
+      SECURITY_GROUP_NAME = "instance-test-sg"
+      DESCRIPTION = "Security Group for testing"
 
       created_vpcs = []
       created_subnets = []
+      created_security_groups = []
       created_instances = []
 
       before(:all) do
@@ -22,6 +25,10 @@ module AwsWrapper
         created_vpcs << vpc_info[:vpc_id]
         subnet_info = AwsWrapper::Ec2::Subnet.create(SUBNET_NAME, SUBNET_CIDR, VPC_NAME)
         created_subnets << subnet_info[:subnet_id]
+        sg_info = AwsWrapper::Ec2::SecurityGroup.create(
+          SECURITY_GROUP_NAME, DESCRIPTION, vpc_info[:vpc_id]
+        )
+        created_security_groups << sg_info[:group_id]
       end
 
       it "creates instance" do
@@ -47,6 +54,18 @@ module AwsWrapper
         expect(instance.source_dest_check).not_to be true
       end
 
+      it "associates security group" do
+        instance = AwsWrapper::Ec2::Instance.new(INSTANCE_NAME)
+        instance.associate_security_group(SECURITY_GROUP_NAME)
+        expect(instance.associated_with?(SECURITY_GROUP_NAME)).to be true
+      end
+
+      it "disassiciates security group" do
+        instance = AwsWrapper::Ec2::Instance.new(INSTANCE_NAME)
+        instance.disassociate_security_group(SECURITY_GROUP_NAME)
+        expect(instance.associated_with?(SECURITY_GROUP_NAME)).not_to be true
+      end
+
       it "deletes instance" do
         instance = AwsWrapper::Ec2::Instance.new(INSTANCE_NAME)
         AwsWrapper::Ec2::Instance.delete(INSTANCE_NAME)
@@ -61,6 +80,9 @@ module AwsWrapper
       after(:all) do
         created_instances.each do |instance_id|
           AwsWrapper::Ec2::Instance.delete(instance_id)
+        end
+        created_security_groups.each do |group_id|
+          AwsWrapper::Ec2::SecurityGroup.delete(group_id)
         end
         created_subnets.each do |subnet_id|
           AwsWrapper::Ec2::Subnet.delete!(subnet_id)
