@@ -1,6 +1,110 @@
+require 'ipaddr'
+
 module AwsWrapper
   module Ec2
     class SecurityGroup
+      PROTO_TCP  = :tcp
+      PROTO_UDP  = :udp
+      PROTO_ICMP = :icmp
+      PROTO_ALL  = :any
+
+      PORT_ALL   = nil
+
+      def initialize(id_or_name)
+        @sg = SecurityGroup.find(id_or_name)
+        @aws_sg = AWS::EC2::SecurityGroup.new(@sg[:group_id])
+      end
+
+      def add_inbound_rule(protocol, ports, source)
+        return if has_inbound_rule?(protocol, ports, source)
+        @aws_sg.authorize_ingress(protocol, ports, parse_source(source))
+      end
+
+      def remove_inbound_rule(protocol, ports, source)
+        @aws_sg.revoke_ingress(protocol, ports, parse_source(source))
+      end
+
+      def has_inbound_rule?(protocol, ports, source)
+        source_hash = create_source_hash(source)
+        target_ip_perm = AWS::EC2::SecurityGroup::IpPermission.new(
+          @aws_sg, protocol, ports, source_hash
+        )
+        @aws_sg.ingress_ip_permissions.each do |ip_perm|
+          return true if ip_perm.eql?(target_ip_perm)
+        end
+        false
+      end
+
+      def add_outbound_rule(protocol, ports, destination)
+        return if has_outbound_rule?(protocol, ports, destination)
+
+        options = { :protocol => protocol, :ports => ports }
+        @aws_sg.authorize_egress(destination, options)
+      end
+
+      def remove_outbound_rule(destination)
+        @aws_sg.revoke_egress(destination)
+      end
+
+      def has_outbound_rule?(protocol, ports, destination)
+        destination_hash = create_destination_hash(destination)
+        target_ip_perm = AWS::EC2::SecurityGroup::IpPermission.new(
+          @aws_sg, protocol, ports, destination_hash
+        )
+        @aws_sg.egress_ip_permissions.each do |ip_perm|
+          return true if ip_perm.eql?(target_ip_perm)
+        end
+        false
+      end
+
+      def parse_source(source)
+        if cidr?(source)
+          return source
+        elsif SecurityGroup.find(source)
+          sg = SecurityGroup.find(source)
+          return sg[:group_id]
+        elsif AwsWrapper::Elb.find(source)
+          elb = AWS::ELB.new.load_balancers[source]
+          return elb # AWS::ELB::LoadBalancer
+        end
+        nil
+      end
+      private :parse_source
+
+      def create_source_hash(source)
+        hash = {}
+        hash[:egress] = false
+        if cidr?(source)
+          hash[:ip_ranges] = [source]
+        elsif SecurityGroup.find(source)
+          sg = SecurityGroup.new(source)
+          hash[:groups] = [AWS::EC2::SecurityGroup.new(sg[:group_id])]
+        end
+        hash
+      end
+
+      def create_destination_hash(destination)
+        hash = {}
+        hash[:egress] = true
+        if cidr?(destination)
+          hash[:ip_ranges] = [destination]
+        elsif SecurityGroup.find(destination)
+          sg = SecurityGroup.new(destination)
+          hash[:groups] = [AWS::EC2::SecurityGroup.new(sg[:group_id])]
+        end
+        hash
+      end
+
+      def cidr?(source)
+        begin
+          IPAddr.new(source)
+          return true
+        rescue IPAddr::InvalidAddressError
+        end
+        false
+      end
+      private :cidr?
+
       class << self
         def create(name, description, vpc)
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)

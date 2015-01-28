@@ -4,10 +4,16 @@ module AwsWrapper
   module Ec2
     describe SecurityGroup do
 
-      VPC_NAME    = "vpc-securigy-group-test"
-      VPC_CIDR    = "10.10.0.0/16"
-      SECURITY_GROUP_NAME = "vpc-security-group-test-sg"
-      DESCRIPTION = "Security Group for testing"
+      VPC_NAME             = "vpc-securigy-group-test"
+      VPC_CIDR             = "10.10.0.0/16"
+      SECURITY_GROUP_NAME  = "vpc-security-group-test-sg"
+      DESCRIPTION          = "Security Group for testing"
+      INBOUND_PROTO        = AwsWrapper::Ec2::SecurityGroup::PROTO_TCP
+      INBOUND_PORT         = 80
+      INBOUND_SOURCE       = "0.0.0.0/0"
+      OUTBOUND_PROTO       = AwsWrapper::Ec2::SecurityGroup::PROTO_ALL
+      OUTBOUND_PORT        = AwsWrapper::Ec2::SecurityGroup::PORT_ALL
+      OUTBOUND_DESTINATION = "0.0.0.0/0"
 
       created_vpcs = []
       created_security_groups = []
@@ -25,6 +31,30 @@ module AwsWrapper
         )
         created_security_groups << sg_info[:group_id]
         expect(AwsWrapper::Ec2::SecurityGroup.exists?(SECURITY_GROUP_NAME)).to be true
+      end
+
+      it "adds inbound rule" do
+        sg = AwsWrapper::Ec2::SecurityGroup.new(SECURITY_GROUP_NAME)
+        sg.add_inbound_rule(INBOUND_PROTO, INBOUND_PORT, INBOUND_SOURCE)
+        expect(sg.has_inbound_rule?(INBOUND_PROTO, INBOUND_PORT, INBOUND_SOURCE)).to be true
+      end
+
+      it "adds outbound rule" do
+        sg = AwsWrapper::Ec2::SecurityGroup.new(SECURITY_GROUP_NAME)
+        sg.add_outbound_rule(OUTBOUND_PROTO, OUTBOUND_PORT, OUTBOUND_DESTINATION)
+        expect(sg.has_outbound_rule?(OUTBOUND_PROTO, OUTBOUND_PORT, OUTBOUND_DESTINATION)).to be true
+      end
+
+      it "removes inbound rule" do
+        sg = AwsWrapper::Ec2::SecurityGroup.new(SECURITY_GROUP_NAME)
+        sg.remove_inbound_rule(INBOUND_PROTO, INBOUND_PORT, INBOUND_SOURCE)
+        expect(sg.has_inbound_rule?(INBOUND_PROTO, INBOUND_PORT, INBOUND_SOURCE)).not_to be true
+      end
+
+      it "removes outbound rule" do
+        sg = AwsWrapper::Ec2::SecurityGroup.new(SECURITY_GROUP_NAME)
+        sg.remove_outbound_rule(OUTBOUND_DESTINATION)
+        expect(sg.has_outbound_rule?(OUTBOUND_PROTO, OUTBOUND_PORT, OUTBOUND_DESTINATION)).not_to be true
       end
 
       it "deletes a SecurityGroup named \'#{SECURITY_GROUP_NAME}\'" do
