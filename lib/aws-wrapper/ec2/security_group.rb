@@ -62,7 +62,7 @@ module AwsWrapper
           return source
         elsif SecurityGroup.find(source)
           sg = SecurityGroup.find(source)
-          return sg[:group_id]
+          return {:group_id => sg[:group_id]}
         elsif AwsWrapper::Elb.find(source)
           elb = AWS::ELB.new.load_balancers[source]
           return elb # AWS::ELB::LoadBalancer
