@@ -94,7 +94,7 @@ module AwsWrapper
           hash[:ip_ranges] = [destination]
         elsif SecurityGroup.find(destination)
           sg = SecurityGroup.new(destination)
-          hash[:groups] = [AWS::EC2::SecurityGroup.new(sg[:group_id])]
+          hash[:groups] = [AWS::EC2::SecurityGroup.new(sg.group_id)]
         end
         hash
       end
