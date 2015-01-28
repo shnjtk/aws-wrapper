@@ -10,6 +10,21 @@ module AwsWrapper
         @aws_instance.status
       end
 
+      def enable_source_dest_check(enabled = true)
+        ec2 = AWS::EC2.new
+        ec2.client.modify_instance_attribute(
+          { :instance_id => @instance[:instance_id], :source_dest_check => { :value => enabled } }
+        )
+      end
+
+      def source_dest_check
+        ec2 = AWS::EC2.new
+        res = ec2.client.describe_instance_attribute(
+          { :instance_id => @instance[:instance_id], :attribute => "sourceDestCheck"}
+        )
+        res[:source_dest_check][:value]
+      end
+
       class << self
         def create(name, ami_id, instance_type, options = {})
           options[:image_id] = ami_id

@@ -35,10 +35,22 @@ module AwsWrapper
         expect(AwsWrapper::Ec2::Instance.exists?(INSTANCE_NAME)).to be true
       end
 
+      it "enables sourceDestCheck" do
+        instance = AwsWrapper::Ec2::Instance.new(INSTANCE_NAME)
+        instance.enable_source_dest_check(true)
+        expect(instance.source_dest_check).to be true
+      end
+
+      it "disables sourceDestCheck" do
+        instance = AwsWrapper::Ec2::Instance.new(INSTANCE_NAME)
+        instance.enable_source_dest_check(false)
+        expect(instance.source_dest_check).not_to be true
+      end
+
       it "deletes instance" do
         instance = AwsWrapper::Ec2::Instance.new(INSTANCE_NAME)
         AwsWrapper::Ec2::Instance.delete(INSTANCE_NAME)
-        retry_count = 3
+        retry_count = 5
         while instance.status == :shutting_down and retry_count > 0 do
           sleep 3
           retry_count = retry_count - 1
