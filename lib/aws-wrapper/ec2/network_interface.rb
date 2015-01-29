@@ -101,7 +101,7 @@ module AwsWrapper
         security_group_ids = []
         groups.each do |group|
           sg_info = AwsWrapper::Ec2::SecurityGroup.find(group)
-          security_group_ids << sg_info[:group_id]
+          security_group_ids << sg_info[:group_id] if sg_info
         end
         @aws_interface.set_security_groups(security_group_ids)
       end
