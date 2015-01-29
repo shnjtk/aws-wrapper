@@ -66,7 +66,7 @@ module AwsWrapper
           security_group_ids << sg.id
         end
         security_group_ids << sg_info[:group_id]
-        set_security_groups
+        set_security_groups(security_group_ids)
       end
 
       def remove_security_group(security_group)
@@ -78,7 +78,7 @@ module AwsWrapper
         set_security_group(security_group_ids)
       end
 
-      def set_security_groups(groups = [])
+      def set_security_groups(groups)
         security_group_ids = []
         groups.each do |group|
           sg_info = AwsWrapper::Ec2::SecurityGroup.find(group)
