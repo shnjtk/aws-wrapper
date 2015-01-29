@@ -6,6 +6,10 @@ module AwsWrapper
         @aws_instance = AWS::EC2::Instance.new(@instance[:instance_id])
       end
 
+      def id
+        @aws_instance.id
+      end
+
       def status
         @aws_instance.status
       end
