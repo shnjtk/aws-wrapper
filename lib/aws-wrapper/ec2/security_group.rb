@@ -21,7 +21,10 @@ module AwsWrapper
 
       def add_inbound_rule(protocol, ports, source)
         return if has_inbound_rule?(protocol, ports, source)
-        @aws_sg.authorize_ingress(protocol, ports, parse_source(source))
+        begin
+          @aws_sg.authorize_ingress(protocol, ports, parse_source(source))
+        rescue AWS::EC2::Errors::InvalidPermission::Duplicate
+        end
       end
 
       def remove_inbound_rule(protocol, ports, source)
@@ -43,7 +46,10 @@ module AwsWrapper
         return if has_outbound_rule?(protocol, ports, destination)
 
         options = { :protocol => protocol, :ports => ports }
-        @aws_sg.authorize_egress(destination, options)
+        begin
+          @aws_sg.authorize_egress(destination, options)
+        rescue AWS::EC2::Errors::InvalidPermission::Duplicate
+        end
       end
 
       def remove_outbound_rule(destination)
