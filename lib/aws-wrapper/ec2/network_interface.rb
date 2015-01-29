@@ -97,6 +97,15 @@ module AwsWrapper
         return false
       end
 
+      def replace_security_groups(groups)
+        security_group_ids = []
+        groups.each do |group|
+          sg_info = AwsWrapper::Ec2::SecurityGroup.find(group)
+          security_group_ids << sg_info[:group_id]
+        end
+        @aws_interface.set_security_groups(security_group_ids)
+      end
+
       class << self
         def create(name, subnet, options = {})
           subnet_info = AwsWrapper::Ec2::Subnet.find(subnet)
