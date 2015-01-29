@@ -59,6 +59,25 @@ module AwsWrapper
         )
       end
 
+      def attach_network_interface(interface)
+        eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
+        eni.attach(@instance[:instance_id])
+      end
+
+      # detach current interface and attach default interface
+      def detach_network_interface(interface)
+        eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
+        eni.deatwch
+      end
+
+      def network_interface_attached?(interface)
+        target_eni = AwsWrapper::Ec2::NetworkInterface.find(interface)
+        @aws_instance.network_interfaces do |eni|
+          return true if eni.id == target_eni.id
+        end
+        false
+      end
+
       class << self
         def create(name, ami_id, instance_type, options = {})
           options[:image_id] = ami_id

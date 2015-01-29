@@ -9,6 +9,10 @@ module AwsWrapper
         @aws_interface = AWS::EC2::NetworkInterface.new(@interface[:network_interface_id])
       end
 
+      def id
+        @aws_interface.id
+      end
+
       def attachment
         @aws_interface.attachment
       end
