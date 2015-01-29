@@ -64,8 +64,12 @@ module AwsWrapper
       end
 
       def attach_network_interface(interface)
+        device_index = 1
+        @aws_instance.network_instances.each do |interface|
+          device_index = interface.attachment.device_index + 1 if interface.attachment
+        end
         eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
-        eni.attach(@instance[:instance_id])
+        eni.attach(@instance[:instance_id], device_index)
       end
 
       # detach current interface and attach default interface
