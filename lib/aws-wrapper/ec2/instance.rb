@@ -92,6 +92,7 @@ module AwsWrapper
           options[:instance_type] = instance_type
           ec2 = AWS::EC2.new
           aws_instance = ec2.instances.create(options)
+          sleep 5
           sleep 5 while aws_instance.status == :pending
           aws_instance.add_tag("Name", :value => name)
           find(name)
