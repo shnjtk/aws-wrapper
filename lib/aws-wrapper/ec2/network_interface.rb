@@ -1,6 +1,8 @@
 module AwsWrapper
   module Ec2
     class NetworkInterface
+      WAIT_LIMIT_TIME = 30 # sec
+      WAIT_INTERVAL   = 5  # sec
 
       attr_reader :aws_interface
 
@@ -11,6 +13,10 @@ module AwsWrapper
 
       def id
         @aws_interface.id
+      end
+
+      def status
+        @aws_interface.status
       end
 
       def attachment
@@ -47,6 +53,11 @@ module AwsWrapper
         options = {}
         options[:device_index] = device_index if device_index
         @aws_interface.attach(instance_info[:instance_id], options)
+        waited_time = 0
+        while status != :in_use and waited_time < WAIT_LIMIT_TIME
+          sleep WAIT_INTERVAL
+          waited_time = waited_time + WAIT_INTERVAL
+        end
       end
 
       def attached?(instance_id_or_name)
@@ -59,6 +70,11 @@ module AwsWrapper
         options = {}
         options[:force] = force_detach
         @aws_interface.detach(options)
+        waited_time = 0
+        while status != :available and waited_time < WAIT_LIMIT_TIME
+          sleep WAIT_INTERVAL
+          waited_time = waited_time + WAIT_INTERVAL
+        end
       end
 
       # append security group to the current groups
@@ -130,6 +146,16 @@ module AwsWrapper
             :network_interface_id => interface[:network_interface_id]
           )
           res[:return]
+        end
+
+        def delete!(id_or_name)
+          begin
+            delete(id_or_name)
+          rescue AWS::EC2::Errors::InvalidParameterValue
+            interface = NetworkInterface.new(id_or_name)
+            interface.detach(true)
+            delete(id_or_name)
+          end
         end
 
         def exists?(id_or_name)
