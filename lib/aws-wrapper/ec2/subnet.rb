@@ -6,6 +6,10 @@ module AwsWrapper
         @aws_subnet = AWS::EC2::Subnet.new(@subnet[:subnet_id])
       end
 
+      def route_table
+        @aws_subnet.route_table
+      end
+
       def set_route_table(id_or_name)
         rt = AwsWrapper::Ec2::RouteTable.find(id_or_name)
         return false if rt.nil?
@@ -36,6 +40,14 @@ module AwsWrapper
 
       def auto_assign_public_ip_enabled?
         @subnet[:map_public_ip_on_launch]
+      end
+
+      def instances
+        @aws_subnet.instances
+      end
+
+      def network_interfaces
+        @aws_subnet.network_interfaces
       end
 
       def vpc
@@ -70,8 +82,12 @@ module AwsWrapper
             delete(id_or_name)
           rescue AWS::EC2::Errors::DependencyViolation
             subnet = AwsWrapper::Ec2::Subnet.new(id_or_name)
-            AwsWrapper::Ec2::Acl.delete(subnet.network_acl.id)
-            AwsWrapper::Ec2::RouteTable.delete(subnet.route_table.id)
+            subnet.network_interfaces.each do |interface|
+              next if interface.attachment and interface.attachment.device_index == 0
+              AwsWrapper::Ec2::NetworkInterface.delete!(interface.id)
+            end
+            AwsWrapper::Ec2::Acl.delete(subnet.network_acl.id) unless subnet.network_acl.default?
+            AwsWrapper::Ec2::RouteTable.delete(subnet.route_table.id) unless subnet.route_table.main?
             subnet.instances.each do |instance|
               AwsWrapper::Ec2::Instance.delete(instance.id)
             end
