@@ -89,6 +89,19 @@ module AwsWrapper
           aws_rt.delete
         end
 
+        def delete!(id_or_name)
+          begin
+            delete(id_or_name)
+          rescue AWS::EC2::Errors::DependencyViolation
+            rt = AwsWrapper::Ec2::RouteTable.new(id_or_name)
+            rt.associations.each do |assoc|
+              assoc.delete unless assoc.main?
+            end
+            delete(id_or_name)
+          end
+
+        end
+
         def exists?(id_or_name)
           find(id_or_name).nil? ? false : true
         end
