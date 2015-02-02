@@ -7,7 +7,7 @@ module AwsWrapper
 
     def set_health_check(target, interval, timeout, unhealthy_threshold, healthy_threshold)
       options = {}
-      options[:load_balancer_name] = @elb[:load_balancer_name]
+      options[:load_balancer_name] = @elb.name
       health_check = {}
       health_check[:target] = target
       health_check[:interval] = interval
