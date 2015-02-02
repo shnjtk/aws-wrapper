@@ -42,8 +42,20 @@ module AwsWrapper
         @aws_rt.associations
       end
 
-      def associated_with?(id_or_name)
-        target_subnet = AwsWrapper::Ec2::Subnet.find(id_or_name)
+      def associate(subnet_id_or_name)
+        target_subnet = AwsWrapper::Ec2::Subnet.new(subnet_id_or_name)
+        return false if target_subnet.nil?
+        target_subnet.set_route_table(@rt[:route_table_id])
+      end
+
+      def disassociate(subnet_id_or_name)
+        target_subnet = AwsWrapper::Ec2::Subnet.new(subnet_id_or_name)
+        return nil if target_subnet.nil?
+        target_subnet.set_route_table(vpc.route_tables.main_route_table.id)
+      end
+
+      def associated_with?(subnet_id_or_name)
+        target_subnet = AwsWrapper::Ec2::Subnet.find(subnet_id_or_name)
         return false if target_subnet.nil?
         subnets.each do |subnet|
           return true if subnet.subnet_id == target_subnet[:subnet_id]
