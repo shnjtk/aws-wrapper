@@ -1,6 +1,9 @@
 module AwsWrapper
   module Ec2
     class Instance
+      WAIT_LIMIT_TIME = 60 # sec
+      WAIT_INTERVAL   = 5  # sec
+
       def initialize(id_or_name)
         @instance = AwsWrapper::Ec2::Instance.find(id_or_name)
         @aws_instance = AWS::EC2::Instance.new(@instance[:instance_id])
@@ -64,23 +67,29 @@ module AwsWrapper
       end
 
       def attach_network_interface(interface)
+        target_eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
+        return false if target_eni.nil?
         device_index = 1
-        @aws_instance.network_instances.each do |interface|
-          device_index = interface.attachment.device_index + 1 if interface.attachment
+        @aws_instance.network_interfaces.each do |attached_interface|
+          next if attached_interface.attachment.nil?
+          if device_index <= attached_interface.attachment.device_index
+            device_index = attached_interface.attachment.device_index + 1
+          end
         end
-        eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
-        eni.attach(@instance[:instance_id], device_index)
+        target_eni.attach(@instance[:instance_id], device_index)
       end
 
-      # detach current interface and attach default interface
-      def detach_network_interface(interface)
-        eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
-        eni.deatwch
+      def detach_network_interface(interface, force = false)
+        target_eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
+        return false if target_eni.nil?
+        target_eni.detach(force)
+        sleep 3
       end
 
       def network_interface_attached?(interface)
-        target_eni = AwsWrapper::Ec2::NetworkInterface.find(interface)
-        @aws_instance.network_interfaces do |eni|
+        target_eni = AwsWrapper::Ec2::NetworkInterface.new(interface)
+        return false if target_eni.nil?
+        @aws_instance.network_interfaces.each do |eni|
           return true if eni.id == target_eni.id
         end
         false
@@ -92,8 +101,15 @@ module AwsWrapper
           options[:instance_type] = instance_type
           ec2 = AWS::EC2.new
           aws_instance = ec2.instances.create(options)
-          sleep 5
-          sleep 5 while aws_instance.status == :pending
+          waited_time = 0
+          while aws_instance.status != :running and waited_time < WAIT_LIMIT_TIME
+            sleep WAIT_INTERVAL
+            waited_time = waited_time + WAIT_INTERVAL
+          end
+          if aws_instance.status != :running
+            Instance.delete(aws_instance.id)
+            raise AWS::EC2::Errors::IncorrectInstanceState
+          end
           aws_instance.add_tag("Name", :value => name)
           find(name)
         end
@@ -103,6 +119,14 @@ module AwsWrapper
           return false if instance.nil?
           aws_instance = AWS::EC2::Instance.new(instance[:instance_id])
           aws_instance.delete
+          waited_time = 0
+          while aws_instance.status != :shutting_down and waited_time < WAIT_LIMIT_TIME
+            sleep WAIT_INTERVAL
+            waited_time = waited_time + WAIT_INTERVAL
+          end
+          if aws_instance.status != :shutting_down
+            raise AWS::EC2::Errors::IncorrectInstanceState
+          end
         end
 
         def exists?(id_or_name)
@@ -115,6 +139,8 @@ module AwsWrapper
           return nil unless res.has_key?(:reservation_set)
           res[:reservation_set].each do |reservation|
             reservation[:instances_set].each do |instance|
+              next if instance[:instance_state][:name] == "terminated" or
+                instance[:instance_state][:name] == "shutting_down"
               instance[:tag_set].each do |tag|
                 return instance if tag[:value] == id_or_name
               end
