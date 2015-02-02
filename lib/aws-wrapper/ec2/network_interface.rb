@@ -47,6 +47,18 @@ module AwsWrapper
         @aws_interface.vpc
       end
 
+      def enable_source_dest_check(enabled = false)
+        options = {}
+        options[:network_interface_id] = @interface[:network_interface_id]
+        options[:source_dest_check] = enabled
+        ec2 = AWS::EC2.new
+        ec2.client.modify_network_interface_attribute(options)
+      end
+
+      def source_dest_check_enabled?
+        @aws_interface.source_dest_check
+      end
+
       def attach(instance_id_or_name, device_index = nil)
         instance_info = AwsWrapper::Ec2::Instance.find(instance_id_or_name)
         return false if instance_info.nil?
