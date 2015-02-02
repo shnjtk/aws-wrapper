@@ -50,7 +50,7 @@ module AwsWrapper
       def enable_source_dest_check(enabled = false)
         options = {}
         options[:network_interface_id] = @interface[:network_interface_id]
-        options[:source_dest_check] = enabled
+        options[:source_dest_check] = {:value => enabled}
         ec2 = AWS::EC2.new
         ec2.client.modify_network_interface_attribute(options)
       end
