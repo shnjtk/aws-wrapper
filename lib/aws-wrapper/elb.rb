@@ -1,5 +1,23 @@
 module AwsWrapper
   class Elb
+    def initialize(name)
+      @elb = Elb.find(name)
+      @aws_elb = AWS::ELB.new
+    end
+
+    def set_health_check(target, interval, timeout, unhealthy_threshold, healthy_threshold)
+      options = {}
+      options[:load_balancer_name] = @elb[:load_balancer_name]
+      health_check = {}
+      health_check[:target] = target
+      health_check[:interval] = interval
+      health_check[:timeout] = timeout
+      health_check[:unhealthy_threshold] = unhealthy_threshold
+      health_check[:healthy_threshold] = healthy_threshold
+      options[:health_check] = health_check
+      @aws_elb.client.configure_health_check(options)
+    end
+
     class << self
       def create(name, listeners, availability_zones = [], subnets = [], security_groups = [], internal = false, tags = [])
         options = {}
