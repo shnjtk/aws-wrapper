@@ -1,6 +1,16 @@
 module AwsWrapper
   module Ec2
     class InternetGateway
+
+      def initialize(name_or_id)
+        @igw = InternetGateway.find(name_or_id)
+        @aws_igw = AWS::EC2::InternetGateway.new(@igw[:internet_gateway_id])
+      end
+
+      def id
+        @aws_igw.id
+      end
+
       class << self
         def create(name, vpc)
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
