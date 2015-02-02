@@ -24,8 +24,16 @@ module AwsWrapper
         options[:load_balancer_name] = name
         options[:listeners] = listeners
         options[:availability_zones] = availability_zones unless availability_zones.empty?
-        options[:subnets] = subnets unless subnets.empty?
-        options[:security_groups] = security_groups
+        subnet_ids = []
+        subnets.each do |subnet|
+          subnet_ids << AwsWrapper::Ec2::Subnet.find(subnet)[:subnet_id]
+        end
+        security_group_ids = []
+        security_groups.each do |security_group|
+          security_group_ids << AwsWrapper::Ec2::SecurityGroup.find(security_group)[:group_id]
+        end
+        options[:subnets] = subnet_ids unless subnet_ids.empty?
+        options[:security_groups] = security_group_ids unless security_group_ids.empty?
         options[:schema] = "internal" if internal
         options[:tags] = tags unless tags.empty?
         aws_elb = AWS::ELB.new
