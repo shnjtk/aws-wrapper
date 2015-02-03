@@ -122,6 +122,9 @@ module AwsWrapper
           interface.security_groups.each do |group|
             new_groups << group if group.group_id != @aws_sg.group_id
           end
+          if new_groups.empty?
+            new_groups << vpc.default_security_group
+          end
           interface.security_groups = new_groups
         end
       end

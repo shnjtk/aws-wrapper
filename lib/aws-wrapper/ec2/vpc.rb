@@ -14,6 +14,12 @@ module AwsWrapper
         nil
       end
 
+      def default_security_group
+        @aws_vpc.security_groups.each do |sg|
+          return sg if sg.name == "default"
+        end
+      end
+
       def network_interfaces
         @aws_vpc.network_interfaces
       end
