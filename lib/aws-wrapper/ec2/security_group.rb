@@ -118,9 +118,11 @@ module AwsWrapper
       def disassociate_from_network_interfaces
         vpc = AwsWrapper::Ec2::Vpc.new(@aws_sg.vpc_id)
         vpc.network_interfaces.each do |interface|
-          interface.security_groups = interface.security_groups.select do |group|
-            group.group_id != @aws_sg.group_id
+          new_groups = []
+          interface.security_groups.each do |group|
+            new_groups << group.group_id if group.group_id != @aws_sg.group_id
           end
+          interface.security_groups = new_groups
         end
       end
 
