@@ -14,6 +14,10 @@ module AwsWrapper
         nil
       end
 
+      def network_interfaces
+        @aws_vpc.network_interfaces
+      end
+
       class << self
         def create(name, cidr_block, tenancy = 'default')
           ec2 = AWS::EC2.new

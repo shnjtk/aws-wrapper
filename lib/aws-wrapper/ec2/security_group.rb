@@ -10,13 +10,13 @@ module AwsWrapper
 
       PORT_ALL   = nil
 
-      def group_id
-        @sg[:group_id]
-      end
-
       def initialize(id_or_name)
         @sg = SecurityGroup.find(id_or_name)
         @aws_sg = AWS::EC2::SecurityGroup.new(@sg[:group_id])
+      end
+
+      def group_id
+        @sg[:group_id]
       end
 
       def add_inbound_rule(protocol, ports, source)
@@ -115,6 +115,36 @@ module AwsWrapper
       end
       private :cidr?
 
+      def disassociate_from_network_interfaces
+        vpc = AwsWrapper::Ec2::Vpc.new(@aws_sg.vpc_id)
+        vpc.network_interfaces.each do |interface|
+          interface.security_groups = interface.security_groups.select do |group|
+            group.group_id != @aws_sg.group_id
+          end
+        end
+      end
+      private :disassociate_from_network_interfaces
+
+      def delete_all_rules
+        delete_all_inbound_rules
+        delete_all_outbound_rules
+      end
+      private :delete_all_rules
+
+      def delete_all_inbound_rules
+        @aws_sg.ingress_ip_permissions.each do |ip_perm|
+          ip_perm.revoke
+        end
+      end
+      private :delete_all_inbound_rules
+
+      def delete_all_outbound_rules
+        @aws_sg.egress_ip_permissions.each do |ip_perm|
+          ip_perm.revoke
+        end
+      end
+      private :delete_all_outbound_rules
+
       class << self
         def create(name, description, vpc)
           vpc_info = AwsWrapper::Ec2::Vpc.find(vpc)
@@ -132,6 +162,17 @@ module AwsWrapper
           ec2 = AWS::EC2.new
           res = ec2.client.delete_security_group(:group_id => sg[:group_id])
           res[:return]
+        end
+
+        def delete!(id_or_name)
+          begin
+            delete(id_or_name)
+          rescue AWS::EC2::Errors::DependencyViolation
+            sg = SecurityGroup.new(id_or_name)
+            sg.remove_security_group_from_network_interfaces
+            sg.delete_all_rules
+            delete(id_or_name)
+          end
         end
 
         def exists?(id_or_name)
