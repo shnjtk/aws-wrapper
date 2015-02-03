@@ -123,13 +123,11 @@ module AwsWrapper
           end
         end
       end
-      private :disassociate_from_network_interfaces
 
       def delete_all_rules
         delete_all_inbound_rules
         delete_all_outbound_rules
       end
-      private :delete_all_rules
 
       def delete_all_inbound_rules
         @aws_sg.ingress_ip_permissions.each do |ip_perm|
