@@ -120,7 +120,7 @@ module AwsWrapper
         vpc.network_interfaces.each do |interface|
           new_groups = []
           interface.security_groups.each do |group|
-            new_groups << group.group_id if group.group_id != @aws_sg.group_id
+            new_groups << group if group.group_id != @aws_sg.group_id
           end
           interface.security_groups = new_groups
         end
