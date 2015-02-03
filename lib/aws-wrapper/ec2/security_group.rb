@@ -169,7 +169,7 @@ module AwsWrapper
             delete(id_or_name)
           rescue AWS::EC2::Errors::DependencyViolation
             sg = SecurityGroup.new(id_or_name)
-            sg.remove_security_group_from_network_interfaces
+            sg.disassociate_from_network_interfaces
             sg.delete_all_rules
             delete(id_or_name)
           end
