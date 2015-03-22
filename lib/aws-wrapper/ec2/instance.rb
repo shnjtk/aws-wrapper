@@ -111,8 +111,6 @@ module AwsWrapper
             raise AWS::EC2::Errors::IncorrectInstanceState
           end
           aws_instance.add_tag("Name", :value => name)
-          instance = Instance.new(name)
-          instance.source_dest_check(options[:source_dest_check])
           find(name)
         end
 
