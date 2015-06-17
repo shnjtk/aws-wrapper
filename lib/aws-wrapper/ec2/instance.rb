@@ -95,6 +95,19 @@ module AwsWrapper
         false
       end
 
+      def set_primary_eni_name(name)
+        nis = @instance[:network_interface_set]
+        raise AWS::EC2::Errors::IncorrectInstanceState if nis.empty?
+        nis.each do |ni|
+          next unless ni[:attachment][:device_index] == 0
+          nid = ni[:network_interface_id]
+          target_eni = AwsWrapper::Ec2::NetworkInterface.new(nid)
+          target_eni.set_name(name)
+          return
+        end
+        raise AWS::EC2::Errors::IncorrectInstanceState
+      end
+
       class << self
         def create(name, ami_id, instance_type, options = {})
           options[:image_id] = ami_id
