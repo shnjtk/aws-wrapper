@@ -138,6 +138,10 @@ module AwsWrapper
         @aws_interface.set_security_groups(security_group_ids)
       end
 
+      def set_name(name)
+        @aws_interface.add_tag("Name", :value => name)
+      end
+
       class << self
         def create(name, subnet, options = {})
           subnet_info = AwsWrapper::Ec2::Subnet.find(subnet)
